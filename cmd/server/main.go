@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jeffersonbraster/apigo/configs"
 	"github.com/jeffersonbraster/apigo/internal/entity"
 	"github.com/jeffersonbraster/apigo/internal/infra/database"
@@ -26,7 +28,12 @@ func main() {
 		productDB := database.NewProduct(db)
 		productHandle := handlers.NewProductHandle(productDB)
 
-		http.HandleFunc("/products", productHandle.CreateProduct)
-		http.ListenAndServe(":8000", nil)
+		r := chi.NewRouter()
+		r.Use(middleware.Logger)
+		r.Post("/products", productHandle.CreateProduct)
+		r.Get("/products/{id}", productHandle.GetProduct)
+		r.Put("/products/{id}", productHandle.UpdateProduct)
+
+		http.ListenAndServe(":8000", r)
 }
 
