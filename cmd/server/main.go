@@ -8,13 +8,32 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth"
 	"github.com/jeffersonbraster/apigo/configs"
+	_ "github.com/jeffersonbraster/apigo/docs"
 	"github.com/jeffersonbraster/apigo/internal/entity"
 	"github.com/jeffersonbraster/apigo/internal/infra/database"
 	"github.com/jeffersonbraster/apigo/internal/infra/webserver/handlers"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
+// @title           Go Expert API Example
+// @version         1.0
+// @description     Product API with auhtentication
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   Jefferson Brandão
+// @contact.url    http://www.jeffersonbrandao.com.br
+// @contact.email  oi@jeffersonbrandao.com.br
+
+// @license.name   Jefferson Brandao License
+// @license.url    http://www.jeffersonbrandao.com.br
+
+// @host      localhost:8000
+// @BasePath  /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 		configs, err := configs.LoadConfig(".")
 		if err != nil {
@@ -51,6 +70,8 @@ func main() {
 
 		r.Post("/users", userHandle.CreateUser)
 		r.Post("/users/login", userHandle.GetJwt)
+
+		r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:8000/docs/doc.json")))
 
 		http.ListenAndServe(":8000", r)
 }

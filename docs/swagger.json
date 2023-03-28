@@ -1,0 +1,28 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Product API with auhtentication",
+        "title": "Go Expert API Example",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Jefferson Brandão",
+            "url": "http://www.jeffersonbrandao.com.br",
+            "email": "oi@jeffersonbrandao.com.br"
+        },
+        "license": {
+            "name": "Jefferson Brandao License",
+            "url": "http://www.jeffersonbrandao.com.br"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "paths": {},
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
