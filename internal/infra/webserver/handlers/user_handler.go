@@ -11,6 +11,9 @@ import (
 	"github.com/jeffersonbraster/apigo/internal/infra/database"
 )
 
+type Error struct {
+	Message string `json:"message"`
+}
 
 type UserHandler struct {
 	UserDB database.UserInterface
@@ -26,6 +29,17 @@ func NewUserHandler(UserDB database.UserInterface, jwt *jwtauth.JWTAuth, JwtExpi
 	}
 }
 
+// GetJWT godoc
+// @Summary      Get a user JWT
+// @Description  Get a user JWT
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        request   body     dto.GetJWTInput  true  "user credentials"
+// @Success      200  {object}  dto.GetJWTOutput
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /users/login [post]
 func (h *UserHandler) GetJwt(w http.ResponseWriter, r *http.Request) {
 	var user dto.GetJWTInput
 
@@ -37,12 +51,16 @@ func (h *UserHandler) GetJwt(w http.ResponseWriter, r *http.Request) {
 
 	u, err := h.UserDB.FindByEmail(user.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusNotFound)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 
 	if !u.ValidatePassword(user.Password) {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusNotFound)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 
@@ -51,14 +69,12 @@ func (h *UserHandler) GetJwt(w http.ResponseWriter, r *http.Request) {
 		"exp": time.Now().Add(time.Second * time.Duration(h.JwtExpiresIn)).Unix(),
 	})
 
-	accessToken := struct {
-		AccessToken string `json:"access_token"`
-	}{
-		AccessToken: tokenString,
-	}
+	accessToken := dto.GetJWTOutput{AccessToken: tokenString}
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 
@@ -67,6 +83,16 @@ func (h *UserHandler) GetJwt(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(accessToken)
 }
 
+// Create user godoc
+// @Summary      Create user
+// @Description  Create user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        request     body      dto.CreateUserInput  true  "user request"
+// @Success      201
+// @Failure      500         {object}  Error
+// @Router       /users [post]
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user dto.CreateUserInput
 
@@ -79,12 +105,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	u, err := entity.NewUser(user.Name, user.Email, user.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 
 	err = h.UserDB.Create(u)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 
